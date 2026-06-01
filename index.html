@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS HUB // PREMIUM GAMES</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-image: url('https://i.pinimg.com/1200x/42/01/1a/42011a0c49cf61d2c4737fbd33f6fd97.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            font-family: 'Cairo', 'Segoe UI', sans-serif;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* فريم الموبيل الموحد الثابت */
+        .phone-wrapper {
+            width: 360px;
+            height: 760px;
+            background: linear-gradient(135deg, rgba(10, 15, 30, 0.96), rgba(15, 23, 42, 0.96));
+            border: 2px solid rgba(234, 179, 8, 0.4);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 0 25px rgba(234, 179, 8, 0.2), 0 20px 50px rgba(0,0,0,0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        /* شريط التبويبات السفلي للتنقل بين الألعاب */
+        .nav-tabs {
+            background: rgba(15, 23, 42, 0.98);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            height: 65px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 90;
+        }
+
+        .tab-btn {
+            flex: 1;
+            height: 100%;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-family: 'Cairo', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn span {
+            font-size: 18px;
+        }
+
+        .tab-btn.active {
+            color: #eab308;
+            background: rgba(234, 179, 8, 0.05);
+            box-shadow: inset 0 3px 0 #eab308;
+        }
+
+        /* حاويات الألعاب */
+        .game-view {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .game-view.active {
+            display: flex;
+        }
+
+        /* شاشات اختراق السيرفر لكل لعبة */
+        .hack-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(6, 8, 16, 0.97);
+            z-index: 99;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .hack-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .spinner {
+            width: 55px;
+            height: 55px;
+            border: 4px solid rgba(234, 179, 8, 0.1);
+            border-top: 4px solid #eab308;
+            border-right: 4px solid #eab308;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.3);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hack-text {
+            color: #eab308;
+            font-size: 15px;
+            font-weight: 600;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(234, 179, 8, 0.6);
+            animation: pulse 1.2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; transform: scale(0.98); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+
+        /* المكونات العامة المشتركة للأشرطة العلوية */
+        .top-bar {
+            background-color: rgba(15, 23, 42, 0.85);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 5;
+        }
+
+        .game-title {
+            color: #eab308;
+            font-weight: 900;
+            text-shadow: 0 0 8px rgba(234, 179, 8, 0.4);
+        }
+
+        .balance-box {
+            background: rgba(241, 196, 15, 0.1);
+            padding: 3px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(241, 196, 15, 0.3);
+            font-size: 12px;
+        }
+        .balance-box span {
+            color: #f1c40f;
+            font-weight: 700;
+        }
+
+        .footer-controls {
+            background-color: rgba(15, 23, 42, 0.96);
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 6;
+        }
+
+        .bet-input-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(30, 41, 59, 0.7);
+            padding: 6px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .bet-input-area input {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            width: 80px;
+            text-align: center;
+            outline: none;
+        }
+
+        .action-btn {
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .action-btn:active { transform: scale(0.98); }
+        .action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* ==================== 1. ستايلات لعبة الطيارة ==================== */
+        .history-bar {
+            background: rgba(10, 15, 30, 0.6);
+            padding: 6px 10px;
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .history-bar::-webkit-scrollbar { display: none; }
+        .hist-tag {
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 12px;
+            font-weight: 700;
+            background: rgba(234, 179, 8, 0.2);
+            color: #fde047;
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+        .hist-tag.low { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border-color: rgba(59, 130, 246, 0.3); }
+
+        .main-game-screen {
+            flex: 1;
+            position: relative;
+            background: radial-gradient(circle at center, rgba(17, 24, 39, 0.6) 0%, rgba(3, 7, 18, 0.9) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            overflow: hidden;
+            padding-bottom: 30px;
+        }
+
+        .radar-grid {
+            position: absolute;
+            top: 0; left: 0; width: 200%; height: 200%;
+            background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 40px 40px; z-index: 1;
+        }
+
+        .gold-trail-fill {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(ellipse at 0% 100%, rgba(234, 179, 8, 0.25) 0%, rgba(234, 179, 8, 0.05) 60%, transparent 100%);
+            clip-path: polygon(0% 100%, 0% 100%, 0% 100%); z-index: 2; transition: all 0.1s linear; pointer-events: none;
+        }
+
+        .gold-smoke {
+            position: absolute; width: 16px; height: 16px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(234,179,8,0.9) 0%, rgba(234,179,8,0.4) 50%, transparent 100%);
+            pointer-events: none; z-index: 3; animation: smokeFade 1.2s linear forwards; filter: blur(2px);
+        }
+
+        @keyframes smokeFade { 0% { opacity: 0.9; transform: scale(0.6); } 100% { opacity: 0; transform: scale(2.5); } }
+
+        .display-container { display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5; min-height: 70px; }
+        .multiplier-display { font-size: 42px; font-weight: 800; color: white; text-shadow: 0 4px 15px rgba(234, 179, 8, 0.4); font-family: monospace; }
+        .multiplier-display.flew { color: #ef4444; text-shadow: 0 4px 15px rgba(239, 68, 68, 0.5); }
+        .flew-away-text { font-size: 14px; font-weight: 700; color: #ef4444; opacity: 0; margin-top: 2px; text-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
+
+        .plane-container { position: absolute; bottom: 15%; left: 5%; width: 65px; height: 65px; z-index: 4; transition: all 0.1s linear; pointer-events: none; }
+        .plane-icon { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 10px rgba(234, 179, 8, 0.8)); }
+
+        .start-btn { background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3); }
+        .cashout-btn { background: linear-gradient(135deg, #eab308, #ca8a04); box-shadow: 0 4px 12px rgba(202, 138, 4, 0.3); display: none; }
+        .prediction-box { text-align: center; font-size: 11px; color: #38bdf8; font-weight: 700; min-height: 16px; }
+
+        /* ==================== 2. ستايلات لعبة الكوبيات ==================== */
+        .score-row { display: flex; justify-content: center; gap: 12px; padding: 8px; background: rgba(0,0,0,0.2); }
+        .score-box { text-align: center; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 4px 14px; flex: 1; }
+        .score-label { color: rgba(255, 255, 255, 0.4); font-size: 10px; }
+        .score-val { color: white; font-size: 14px; font-weight: 700; }
+        .score-val.wins { color: #97c459; }
+        .score-val.losses { color: #e24b4a; }
+
+        .arena { position: relative; flex: 1; overflow: hidden; background: rgba(0,0,0,0.15); }
+        .cup-wrap { position: absolute; width: 95px; height: 150px; transition: left .2s cubic-bezier(.4,0,.2,1), top .2s cubic-bezier(.4,0,.2,1); top: 50px; }
+        .cup-img { width: 105px; position: absolute; bottom: 0; left: -5px; transition: transform .35s cubic-bezier(.4,0,.2,1); cursor: pointer; filter: drop-shadow(0 8px 10px rgba(0,0,0,.6)); }
+        .cup-wrap.selected .cup-img { filter: drop-shadow(0 0 10px rgba(251,191,36,.7)) brightness(1.2); }
+        .cup-img.lifted { transform: translateY(-70px); }
+        .ball { position: absolute; width: 26px; height: 26px; border-radius: 50%; background: radial-gradient(circle at 35% 30%,#fff,#fbbf24 45%,#b45309 100%); border: 2px solid rgba(255,255,255,.5); bottom: 5px; left: 34px; opacity: 0; transition: opacity .25s .2s; box-shadow: 0 2px 6px rgba(0,0,0,.6); }
+        .ball.visible { opacity: 1; }
+
+        .status-bar { text-align: center; font-size: 12px; font-weight: 700; padding: 6px 12px; min-height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; margin: 8px 14px; transition: all .3s; }
+        .status-bar.idle { background: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.6); }
+        .status-bar.shuffling { background: rgba(56, 189, 248, 0.1); color: #60a5fa; }
+        .status-bar.pick { background: rgba(250, 204, 21, 0.08); color: #fcd34d; }
+        .status-bar.win { background: rgba(151, 196, 89, 0.12); color: #97c459; }
+        .status-bar.lose { background: rgba(226, 75, 74, 0.1); color: #e24b4a; }
+        
+        .btn-new { background: linear-gradient(135deg,#0ea5e9,#0284c7); }
+        .btn-show { background: linear-gradient(135deg,#3b6d11,#27500a); }
+
+        /* ==================== 3. ستايلات لعبة التفاحة ==================== */
+        .game-area-apple { flex: 1; position: relative; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 10px; background: radial-gradient(circle at center, rgba(30, 41, 59, 0.2) 0%, rgba(15, 23, 42, 0.5) 100%); }
+        .board-container { display: flex; width: 100%; padding: 0 10px; gap: 8px; margin-bottom: 20px; }
+        .grid { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+        .grid-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; height: 34px; opacity: 0.25; pointer-events: none; transition: opacity 0.3s ease; }
+        .grid-row.active { opacity: 1; pointer-events: auto; }
+        .grid-row.top-arrows { opacity: 1; }
+        .grid-row.top-arrows .cell { background: linear-gradient(135deg, rgba(163, 230, 53, 0.25), rgba(132, 204, 22, 0.25)); border-color: rgba(132, 204, 22, 0.4); cursor: default; }
+        .arrow-icon { width: 8px; height: 8px; border-left: 2px solid #bef264; border-bottom: 2px solid #bef264; transform: rotate(135deg); }
+        .cell { background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; }
+        .grid-row.active .cell:hover { background: rgba(51, 65, 85, 0.8); border-color: rgba(0, 255, 102, 0.5); }
+        .multipliers { display: flex; flex-direction: column; gap: 5px; width: 55px; }
+        .mult-spacer { height: 34px; }
+        .mult-tag { height: 34px; font-size: 10px; font-family: monospace; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-weight: 600; }
+        .mult-tag.active-mult { background: linear-gradient(135deg, #059669, #047857); color: white; border-color: #34d399; box-shadow: 0 0 10px rgba(52, 211, 153, 0.4); }
+        .apple-img { width: 80%; height: 80%; object-fit: contain; animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .bottom-scenery { position: absolute; bottom: 0; left: 0; width: 100%; height: 35px; display: flex; flex-direction: column; z-index: 2; pointer-events: none; opacity: 0.5; }
+        .brick-line { height: 8px; background: repeating-linear-gradient(90deg, rgba(30, 41, 59, 0.4), rgba(30, 41, 59, 0.4) 25px); }
+        .grass-line { flex: 1; background: linear-gradient(to bottom, rgba(21, 128, 61, 0.2), transparent); }
+        .new-round-btn { background: linear-gradient(135deg, #0ea5e9, #0284c7); box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3); }
+        .show-btn { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3); }
+        .current-winnings { text-align: center; font-size: 11px; color: #38bdf8; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <div class="phone-wrapper">
+        
+        <div id="view-aviator" class="game-view active">
+            <div class="hack-overlay" id="hack-screen-aviator">
+                <div class="spinner"></div>
+                <div class="hack-text">جاري اختراق سيرفر Aviator وفك التشفير...</div>
+            </div>
+            
+            <div class="top-bar">
+                <div class="game-title">Aviator Premium</div>
+                <div class="balance-box">الرصيد: <span id="balance-aviator">1000.00</span> د.م</div>
+            </div>
+
+            <div class="history-bar" id="history-bar">
+                <div class="hist-tag low">x1.32</div>
+                <div class="hist-tag">x4.15</div>
+                <div class="hist-tag low">x1.08</div>
+                <div class="hist-tag">x12.40</div>
+                <div class="hist-tag">x2.51</div>
+                <div class="hist-tag low">x1.85</div>
+                <div class="hist-tag">x5.20</div>
+            </div>
+
+            <div class="main-game-screen">
+                <div class="radar-grid"></div>
+                <div class="gold-trail-fill" id="trail-fill"></div>
+                
+                <div class="display-container">
+                    <div class="multiplier-display" id="mult-disp">x1.00</div>
+                    <div class="flew-away-text" id="flew-text">FLEW AWAY</div>
+                </div>
+
+                <div class="plane-container" id="plane-box">
+                    <img src="https://files.catbox.moe/6797gq.png" class="plane-icon" alt="Plane">
+                </div>
+            </div>
+
+            <div class="footer-controls">
+                <div class="prediction-box" id="pred-box">NEXT CRASH: READY</div>
+                <button class="action-btn hack-btn" style="background: linear-gradient(135deg, #eab308, #ca8a04);" onclick="triggerHackAviator()">📊 كشف نقطة الانفجار القادمة</button>
+                <div class="bet-input-area">
+                    <span>مبلغ الرهان:</span>
+                    <input type="number" id="bet-aviator" value="100" min="10">
+                    <span>د.م</span>
+                </div>
+                <button class="action-btn start-btn" id="start-btn-aviator" onclick="startFlight()">إبدأ اللعب 🚀</button>
+                <button class="action-btn cashout-btn" id="cashout-btn-aviator" onclick="cashoutFlight()">سحب الكاش 💰</button>
+            </div>
+        </div>
+
+        <div id="view-cups" class="game-view">
+            <div class="hack-overlay" id="overlay-cups">
+                <div class="spinner"></div>
+                <div class="ov-text" id="ov-text-cups" style="color: #eab308; font-weight: bold;">جاري فحص وتحديد الكوب الصحيح...</div>
+            </div>
+
+            <div class="top-bar">
+                <div class="game-title">كوبيات الحظ</div>
+                <div class="balance-box">الرصيد: <span id="balance-cups">1000</span> 🪙</div>
+            </div>
+
+            <div class="score-row">
+                <div class="score-box"><div class="score-label">فوز</div><div class="score-val wins" id="wins-cups">0</div></div>
+                <div class="score-box"><div class="score-label">جولة</div><div class="score-val" id="rounds-cups">0</div></div>
+                <div class="score-box"><div class="score-label">خسارة</div><div class="score-val losses" id="losses-cups">0</div></div>
+            </div>
+
+            <div class="arena" id="arena">
+                <div class="cup-wrap" id="w0" style="left:15px;"><div class="ball" id="b0"></div><img src="https://files.catbox.moe/n48duc.png" class="cup-img" id="cs0" onclick="pickCup(0)" alt="كوب"></div>
+                <div class="cup-wrap" id="w1" style="left:130px;"><div class="ball" id="b1"></div><img src="https://files.catbox.moe/n48duc.png" class="cup-img" id="cs1" onclick="pickCup(1)" alt="كوب"></div>
+                <div class="cup-wrap" id="w2" style="left:245px;"><div class="ball" id="b2"></div><img src="https://files.catbox.moe/n48duc.png" class="cup-img" id="cs2" onclick="pickCup(2)" alt="كوب"></div>
+            </div>
+
+            <div class="status-bar idle" id="status-cups">اضغط على (خلط الكوبيات) لبدء التحدي!</div>
+
+            <div class="footer-controls">
+                <button class="action-btn btn-show" id="btn-show-cups" onclick="revealAllCups()">🔮 رادار الكشف الذكي (HACK)</button>
+                <div class="bet-input-area">
+                    <span>مبلغ الرهان:</span>
+                    <input type="number" id="bet-cups" value="100" min="10">
+                    <span>🪙</span>
+                </div>
+                <button class="action-btn btn-new" id="btn-new-cups" onclick="startShuffleCups()">خلط الكوبيات 🔀</button>
+            </div>
+        </div>
+
+        <div id="view-apple" class="game-view">
+            <div class="hack-overlay" id="hack-screen-apple">
+                <div class="spinner"></div>
+                <div class="hack-text">جاري اختراق السيرفر وفك تشفير التفاح...</div>
+            </div>
+
+            <div class="top-bar">
+                <div class="game-title">Apple Of Fortune</div>
+                <div class="balance-box">الرصيد: <span id="balance-apple">1000.00</span> د.م</div>
+            </div>
+
+            <div class="game-area-apple">
+                <div class="board-container">
+                    <div class="grid" id="grid-apple"></div>
+                    <div class="multipliers" id="mult-apple"></div>
+                </div>
+                <div class="bottom-scenery"><div class="brick-line"></div><div class="grass-line"></div></div>
+            </div>
+
+            <div class="footer-controls">
+                <div class="current-winnings" id="winnings-apple">الربح الحالي: 0.00 د.م</div>
+                <button class="action-btn show-btn" id="btn-hack-apple" onclick="triggerHackApple()">🛡️ مسار التفاح الآمن (HACK)</button>
+                <div class="bet-input-area">
+                    <span>مبلغ الرهان:</span>
+                    <input type="number" id="bet-apple" value="100" min="10">
+                    <span>د.م</span>
+                </div>
+                <button class="action-btn new-round-btn" id="btn-new-apple" onclick="startAppleRound()">ابدأ جولة جديدة 🍏</button>
+            </div>
+        </div>
+
+        <nav class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('aviator', this)"><span>🚀</span>الطيارة</button>
+            <button class="tab-btn" onclick="switchTab('cups', this)"><span>🥛</span>الكوبيات</button>
+            <button class="tab-btn" onclick="switchTab('apple', this)"><span>🍏</span>التفاحة</button>
+        </nav>
+
+    </div>
+
+    <script>
+        // نظام إدارة رصيد موحد لجميع الألعاب المشتركة
+        let globalBalance = 1000.00;
+
+        function updateAllBalanceDisplays() {
+            document.getElementById('balance-aviator').innerText = globalBalance.toFixed(2);
+            document.getElementById('balance-cups').innerText = Math.floor(globalBalance);
+            document.getElementById('balance-apple').innerText = globalBalance.toFixed(2);
+        }
+
+        // نظام التنقل الفوري بين التبويبات بدون تحميل
+        function switchTab(game, btn) {
+            document.querySelectorAll('.game-view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            if(game === 'aviator') document.getElementById('view-aviator').classList.add('active');
+            if(game === 'cups') document.getElementById('view-cups').classList.add('active');
+            if(game === 'apple') document.getElementById('view-apple').classList.add('active');
+            
+            btn.classList.add('active');
+            updateAllBalanceDisplays();
+        }
+
+        /* ==================== منطق لعبة الطيارة (Aviator) ==================== */
+        let currentMult = 1.00;
+        let crashPoint = 0;
+        let isFlying = false;
+        let flightInterval;
+        let smokeInterval;
+        let hasHackedAviator = false;
+
+        const multDisp = document.getElementById('mult-disp');
+        const flewText = document.getElementById('flew-text');
+        const planeBox = document.getElementById('plane-box');
+        const trailFill = document.getElementById('trail-fill');
+        const predBox = document.getElementById('pred-box');
+        const startBtnAviator = document.getElementById('start-btn-aviator');
+        const cashoutBtnAviator = document.getElementById('cashout-btn-aviator');
+
+        function triggerHackAviator() {
+            const overlay = document.getElementById('hack-screen-aviator');
+            overlay.classList.add('visible');
+            setTimeout(() => {
+                overlay.classList.remove('visible');
+                let nextCrash = (Math.random() * 8 + 1.1).toFixed(2);
+                if(Math.random() < 0.15) nextCrash = (Math.random() * 20 + 8).toFixed(2);
+                crashPoint = parseFloat(nextCrash);
+                predBox.innerText = `NEXT CRASH PREDICTION: x${crashPoint}`;
+                hasHackedAviator = true;
+            }, 2000);
+        }
+
+        function startFlight() {
+            let betVal = parseFloat(document.getElementById('bet-aviator').value) || 100;
+            if(globalBalance < betVal) { alert("رصيدك لا يكفي!"); return; }
+            
+            globalBalance -= betVal;
+            updateAllBalanceDisplays();
+
+            if(!hasHackedAviator) {
+                crashPoint = parseFloat((Math.random() * 5 + 1.1).toFixed(2));
+            }
+            hasHackedAviator = false;
+
+            isFlying = true;
+            currentMult = 1.00;
+            multDisp.innerText = "x1.00";
+            multDisp.classList.remove('flew');
+            flewText.style.opacity = "0";
+            
+            planeBox.style.left = "5%";
+            planeBox.style.bottom = "15%";
+            planeBox.style.transform = "rotate(0deg)";
+
+            startBtnAviator.style.display = "none";
+            cashoutBtnAviator.style.display = "block";
+
+            clearInterval(flightInterval);
+            clearInterval(smokeInterval);
+
+            smokeInterval = setInterval(() => {
+                if(!isFlying) return;
+                let pLeft = parseFloat(planeBox.style.left);
+                let pBottom = parseFloat(planeBox.style.bottom);
+                let smoke = document.createElement('div');
+                smoke.className = 'gold-smoke';
+                smoke.style.left = (pLeft + 2) + "%";
+                smoke.style.bottom = (pBottom + 4) + "%";
+                document.querySelector('.main-game-screen').appendChild(smoke);
+                setTimeout(() => smoke.remove(), 1200);
+            }, 100);
+
+            flightInterval = setInterval(() => {
+                currentMult += 0.02;
+                multDisp.innerText = "x" + currentMult.toFixed(2);
+
+                let progress = (currentMult - 1) / 5; 
+                if(progress > 1) progress = 1;
+                let l = 5 + progress * 70;
+                let b = 15 + progress * 60;
+                
+                planeBox.style.left = l + "%";
+                planeBox.style.bottom = b + "%";
+                planeBox.style.transform = `rotate(-${progress * 15}deg)`;
+                trailFill.style.clipPath = `polygon(0% 100%, ${l}% ${100 - b}%, ${l}% 100%)`;
+
+                if(currentMult >= crashPoint) {
+                    triggerCrash();
+                }
+            }, 80);
+        }
+
+        function triggerCrash() {
+            clearInterval(flightInterval);
+            clearInterval(smokeInterval);
+            isFlying = false;
+            multDisp.classList.add('flew');
+            flewText.style.opacity = "1";
+            trailFill.style.clipPath = `polygon(0% 100%, 0% 100%, 0% 100%)`;
+            predBox.innerText = "NEXT CRASH: WAITING...";
+            planeBox.style.left = "120%";
+            planeBox.style.bottom = "95%";
+
+            // إضافة الجولة لشريط الهستوري تلقائياً
+            const histBar = document.getElementById('history-bar');
+            const newTag = document.createElement('div');
+            newTag.className = `hist-tag ${crashPoint < 2 ? 'low' : ''}`;
+            newTag.innerText = `x${crashPoint.toFixed(2)}`;
+            histBar.insertBefore(newTag, histBar.firstChild);
+
+            setTimeout(() => {
+                startBtnAviator.style.display = "block";
+                cashoutBtnAviator.style.display = "none";
+            }, 1200);
+        }
+
+        function cashoutFlight() {
+            if(!isFlying) return;
+            clearInterval(flightInterval);
+            clearInterval(smokeInterval);
+            isFlying = false;
+
+            let betVal = parseFloat(document.getElementById('bet-aviator').value) || 100;
+            let winAmount = betVal * currentMult;
+            globalBalance += winAmount;
+            updateAllBalanceDisplays();
+            
+            alert(`💰 تم السحب بنجاح ومبروك الفوز! ربحت ${winAmount.toFixed(2)} د.م على مضاعف x${currentMult.toFixed(2)}`);
+            
+            startBtnAviator.style.display = "block";
+            cashoutBtnAviator.style.display = "none";
+        }
+
+
+        /* ==================== منطق لعبة الكوبيات (Cups) ==================== */
+        let ballCup = 0;
+        let phaseCups = 'idle';
+        let winsCups = 0, lossesCups = 0, totalRoundsCups = 0;
+        let cupsOrder = [0, 1, 2];
+
+        function setStatusCups(txt, cls) {
+            const st = document.getElementById('status-cups');
+            st.textContent = txt;
+            st.className = 'status-bar ' + cls;
+        }
+
+        function startShuffleCups() {
+            let betVal = parseFloat(document.getElementById('bet-cups').value) || 100;
+            if(globalBalance < betVal) { alert("رصيدك الحالي لا يكفي!"); return; }
+            
+            globalBalance -= betVal;
+            updateAllBalanceDisplays();
+
+            phaseCups = 'shuffling';
+            setStatusCups('جاري خلط الكوبيات بخفة وسرعة... 👀', 'shuffling');
+            document.getElementById('btn-new-cups').disabled = true;
+            document.getElementById('btn-show-cups').disabled = true;
+
+            // تصفير وتهيئة الحركات السابقة
+            for(let i=0; i<3; i++) {
+                document.getElementById('w'+i).classList.remove('selected');
+                document.getElementById('cs'+i).classList.remove('lifted');
+                document.getElementById('b'+i).classList.remove('visible');
+            }
+
+            ballCup = Math.floor(Math.random() * 3);
+            let count = 0;
+            
+            let shfInterval = setInterval(() => {
+                let i = Math.floor(Math.random() * 3);
+                let j = Math.floor(Math.random() * 3);
+                while(i === j) { j = Math.floor(Math.random() * 3); }
+                
+                let posI = document.getElementById('w'+i).style.left;
+                document.getElementById('w'+i).style.left = document.getElementById('w'+j).style.left;
+                document.getElementById('w'+j).style.left = posI;
+                
+                count++;
+                if(count >= 6) {
+                    clearInterval(shfInterval);
+                    setTimeout(() => {
+                        phaseCups = 'pick';
+                        setStatusCups('اختر الكوب الصحيح الآن بحذر! 👇', 'pick');
+                        document.getElementById('btn-show-cups').disabled = false;
+                    }, 300);
+                }
+            }, 250);
+        }
+
+        function pickCup(ci) {
+            if(phaseCups !== 'pick') return;
+            phaseCups = 'result';
+            document.getElementById('btn-show-cups').disabled = true;
+            
+            document.getElementById('w'+ci).classList.add('selected');
+            document.getElementById('cs'+ci).classList.add('lifted');
+            setTimeout(() => { document.getElementById('b'+ci).classList.add('visible'); }, 280);
+
+            let betVal = parseFloat(document.getElementById('bet-cups').value) || 100;
+
+            setTimeout(() => {
+                totalRoundsCups++;
+                if(ci === ballCup) {
+                    winsCups++;
+                    let prize = betVal * 3;
+                    globalBalance += prize;
+                    setStatusCups('صح ومبروك! كشفت الكوب وربحت ' + prize + ' كوينز 🎉', 'win');
+                } else {
+                    lossesCups++;
+                    document.getElementById('cs'+ballCup).classList.add('lifted');
+                    setTimeout(() => { document.getElementById('b'+ballCup).classList.add('visible'); }, 280);
+                    setStatusCups('للأسف خطأ! الكورة كانت تحت الكوب الآخر ❌', 'lose');
+                }
+                
+                document.getElementById('wins-cups').innerText = winsCups;
+                document.getElementById('rounds-cups').innerText = totalRoundsCups;
+                document.getElementById('losses-cups').innerText = lossesCups;
+                
+                document.getElementById('btn-new-cups').disabled = false;
+                updateAllBalanceDisplays();
+            }, 500);
+        }
+
+        function revealAllCups() {
+            if(phaseCups !== 'pick') return;
+            const overlay = document.getElementById('overlay-cups');
+            overlay.classList.add('on');
+            setTimeout(() => {
+                overlay.classList.remove('on');
+                // تحديد وتمييز الكوب الصحيح بواسطة الهاك رادار
+                document.getElementById('w'+ballCup).classList.add('selected');
+                alert(`🔮 الرادار الذكي اكتشف الكرة! الكرة مخفية تحت الكوب رقم ${ballCup + 1}`);
+            }, 1500);
+        }
+
+
+        /* ==================== منطق لعبة التفاحة (Apple Of Fortune) ==================== */
+        const ROWS = 10;
+        const COLS = 5;
+        const MULTIPLIERS_APPLE = [1.23, 1.54, 1.93, 2.41, 3.02, 3.77, 4.72, 5.90, 7.38, 9.22];
+        
+        let boardApple = [];
+        let activeRowApple = 0;
+        let currentBetApple = 100;
+        let currentWinApple = 0;
+        let isGameActiveApple = false;
+        let hasHackedApple = false;
+
+        function initAppleBoardVisuals() {
+            const gridEl = document.getElementById('grid-apple');
+            const multEl = document.getElementById('mult-apple');
+            gridEl.innerHTML = '';
+            multEl.innerHTML = '';
+
+            // إنشاء شبكة التفاح الفاخرة
+            for (let r = ROWS - 1; r >= 0; r--) {
+                const rowEl = document.createElement('div');
+                rowEl.className = 'grid-row';
+                rowEl.id = `grid-row-${r}`;
+                
+                for (let c = 0; c < COLS; c++) {
+                    const cellEl = document.createElement('div');
+                    cellEl.className = 'cell';
+                    cellEl.setAttribute('onclick', `clickAppleCell(${r}, ${c})`);
+                    rowEl.appendChild(cellEl);
+                }
+                gridEl.appendChild(rowEl);
+
+                const tagEl = document.createElement('div');
+                tagEl.className = 'mult-tag';
+                tagEl.id = `mult-tag-${r}`;
+                tagEl.innerText = `x${MULTIPLIERS_APPLE[r]}`;
+                multEl.appendChild(tagEl);
+            }
+        }
+
+        function startAppleRound() {
+            let betVal = parseFloat(document.getElementById('bet-apple').value) || 100;
+            if(globalBalance < betVal) { alert("رصيدك غير كافي لبدء الجولة!"); return; }
+            
+            globalBalance -= betVal;
+            currentBetApple = betVal;
+            updateAllBalanceDisplays();
+
+            isGameActiveApple = true;
+            activeRowApple = 0;
+            currentWinApple = 0;
+            hasHackedApple = false;
+            
+            document.getElementById('winnings-apple').innerText = `الربح الحالي: 0.00 د.م`;
+            document.getElementById('btn-new-apple').disabled = true;
+
+            // توليد أماكن التفاح العشوائية (تفاح سليم وتفاح مأكول فاسد)
+            boardApple = [];
+            for (let r = 0; r < ROWS; r++) {
+                let rowApples = [];
+                let badCount = r >= 7 ? 3 : (r >= 4 ? 2 : 1); // الصعوبة تزداد كلما ارتفعت لأعلى
+                let indices = [0, 1, 2, 3, 4];
+                let badIndices = [];
+                for(let b=0; b<badCount; b++) {
+                    let randIdx = Math.floor(Math.random() * indices.length);
+                    badIndices.push(indices.splice(randIdx, 1)[0]);
+                }
+                for(let c=0; c<COLS; c++) {
+                    rowApples.push(badIndices.includes(c) ? 'bad' : 'good');
+                }
+                boardApple.push(rowApples);
+            }
+
+            resetAppleBoardVisuals();
+            makeRowActiveApple(0);
+        }
+
+        function makeRowActiveApple(idx) {
+            for(let i=0; i<ROWS; i++) {
+                document.getElementById(`grid-row-${i}`).classList.remove('active');
+                document.getElementById(`mult-tag-${i}`).classList.remove('active-mult');
+            }
+            if(idx < ROWS && isGameActiveApple) {
+                document.getElementById(`grid-row-${idx}`).classList.add('active');
+                document.getElementById(`mult-tag-${idx}`).classList.add('active-mult');
+            }
+        }
+
+        function clickAppleCell(r, c) {
+            if(!isGameActiveApple || r !== activeRowApple) return;
+
+            const cellEl = document.getElementById(`grid-row-${r}`).children[c];
+            
+            if(boardApple[r][c] === 'good') {
+                cellEl.innerHTML = `<img src="https://files.catbox.moe/g2f7p5.png" class="apple-img" alt="Good">`;
+                cellEl.style.backgroundColor = "rgba(22, 163, 74, 0.3)";
+                cellEl.style.borderColor = "#22c55e";
+                
+                currentWinApple = currentBetApple * MULTIPLIERS_APPLE[r];
+                document.getElementById('winnings-apple').innerText = `الربح الحالي: ${currentWinApple.toFixed(2)} د.م`;
+                
+                if(r === ROWS - 1) { // الفوز بالقمة النهائية
+                    alert(`🏆 مبروك الخيال! قفلت اللعبة للنهاية وربحت ${currentWinApple.toFixed(2)} د.م`);
+                    globalBalance += currentWinApple;
+                    endAppleGame();
+                } else {
+                    activeRowApple++;
+                    makeRowActiveApple(activeRowApple);
+                    if(hasHackedApple) showAppleHackForCurrentRow();
+                }
+            } else { // تفاحة مأكولة خطأ وموت
+                cellEl.innerHTML = `<img src="https://files.catbox.moe/8yqgki.png" class="apple-img" alt="Bad">`;
+                cellEl.style.backgroundColor = "rgba(153, 27, 27, 0.6)";
+                cellEl.style.borderColor = "#ef4444";
+                showAllAppleBoard();
+                alert("💥 خطأ كبير وقنبلة! التفاحة مأكولة وفاسدة.");
+                currentWinApple = 0;
+                endAppleGame();
+            }
+            updateAllBalanceDisplays();
+        }
+
+        function triggerHackApple() {
+            if(!isGameActiveApple) { alert("ابدأ جولة جديدة أولاً لتفعيل الهاك الراداري!"); return; }
+            const overlay = document.getElementById('hack-screen-apple');
+            overlay.classList.add('visible');
+            setTimeout(() => {
+                overlay.classList.remove('visible');
+                hasHackedApple = true;
+                showAppleHackForCurrentRow();
+            }, 1500);
+        }
+
+        function showAppleHackForCurrentRow() {
+            if(!isGameActiveApple || activeRowApple >= ROWS) return;
+            const cells = document.getElementById(`grid-row-${activeRowApple}`).children;
+            // تلوين كل تفاحة آمنة ومضمونة بنسبة 100% باللون الذهبي الشفاف المميز للهاك
+            for(let c=0; c<COLS; c++) {
+                if(boardApple[activeRowApple][c] === 'good') {
+                    cells[c].style.backgroundColor = "rgba(234, 179, 8, 0.35)";
+                    cells[c].style.borderColor = "#eab308";
+                }
+            }
+        }
+
+        function showAllAppleBoard() {
+            for(let r=0; r<ROWS; r++) {
+                const rowEl = document.getElementById(`grid-row-${r}`);
+                rowEl.style.opacity = "1";
+                for(let c=0; c<COLS; c++) {
+                    if(boardApple[r][c] === 'good') {
+                        rowEl.children[c].innerHTML = `<img src="https://files.catbox.moe/g2f7p5.png" class="apple-img" alt="G">`;
+                    } else {
+                        rowEl.children[c].innerHTML = `<img src="https://files.catbox.moe/8yqgki.png" class="apple-img" alt="B">`;
+                    }
+                }
+            }
+        }
+
+        function resetAppleBoardVisuals() {
+            for(let r=0; r<ROWS; r++) {
+                const rowEl = document.getElementById(`grid-row-${r}`);
+                rowEl.style.opacity = "0.25";
+                for(let c=0; c<COLS; c++) {
+                    rowEl.children[c].innerHTML = "";
+                    rowEl.children[c].style.backgroundColor = "rgba(30, 41, 59, 0.6)";
+                    rowEl.children[c].style.borderColor = "rgba(255, 255, 255, 0.1)";
+                }
+            }
+        }
+
+        function endAppleGame() {
+            isGameActiveApple = false;
+            if(currentWinApple > 0) {
+                globalBalance += currentWinApple;
+            }
+            document.getElementById('btn-new-apple').disabled = false;
+            for(let i=0; i<ROWS; i++) {
+                document.getElementById(`grid-row-${i}`).classList.remove('active');
+            }
+            updateAllBalanceDisplays();
+        }
+
+        // تشغيل البنيات الأساسية عند تحميل الصفحة بالكامل
+        window.onload = () => {
+            initAppleBoardVisuals();
+            updateAllBalanceDisplays();
+        };
+    </script>
+</body>
+</html>
