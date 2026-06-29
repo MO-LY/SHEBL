@@ -1,579 +1,533 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Shebl | Streamer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --gold: #d4a373;
-    --gold-light: #f5e6c8;
-    --dark: #0a0c0f;
-    --dark2: #111318;
-    --cord-y: 155px;
-  }
-
   html, body {
     width: 100%; min-height: 100vh;
-    background: var(--dark);
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: #0a0c0f;
+    font-family: 'Inter', 'Montserrat', system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
-    transition: background 0.7s ease;
+    color: #FFFFFF;
   }
 
-  /* ── BG IMAGE ── */
+  /* ── FIXED BACKGROUND ── */
   #bg-img {
     position: fixed; inset: 0;
-    background: url('https://files.catbox.moe/og2hd9.png') center/cover no-repeat;
-    opacity: 0;
-    transition: opacity 1s ease;
+    background: url('https://files.catbox.moe/og2hd9.png') center center/cover no-repeat;
+    opacity: 0.18;
     z-index: 0;
     pointer-events: none;
+    transform: translate3d(0,0,0);
   }
-  #bg-img::after {
-    content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.7) 100%);
-  }
-
-  /* ── WARM GLOW ── */
-  #bg-glow {
+  #bg-overlay {
     position: fixed; inset: 0;
-    background: radial-gradient(ellipse 70% 55% at 40% 35%, rgba(255,195,70,0.18), transparent 70%);
-    opacity: 0;
-    transition: opacity 0.7s ease;
-    z-index: 0;
-    pointer-events: none;
-  }
-
-  /* ── LAYOUT ── */
-  .page {
-    position: relative;
+    background: linear-gradient(to bottom, rgba(10,12,15,0.55) 0%, rgba(10,12,15,0.3) 50%, rgba(10,12,15,0.85) 100%);
     z-index: 1;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 60px;
-    padding: 40px 24px;
-    flex-wrap: wrap;
-  }
-
-  /* ══════════════════════════════
-     LAMP
-  ══════════════════════════════ */
-  .lamp-col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    flex-shrink: 0;
-  }
-
-  .lamp-wrap {
-    position: relative;
-    width: 200px;
-    height: 340px;
-  }
-
-  .lamp-svg { width: 100%; height: 100%; overflow: visible; display: block; }
-
-  /* shade */
-  .l-shade {
-    fill: #ddd8ce;
-    transition: fill 0.6s ease, filter 0.6s ease;
-    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
-  }
-  body.on .l-shade {
-    fill: #fffef5;
-    filter: drop-shadow(0 0 28px rgba(255,240,120,0.65)) drop-shadow(0 2px 6px rgba(0,0,0,0.2));
-  }
-
-  /* inner warm bulb */
-  .l-bulb {
-    fill: #ffd766;
-    opacity: 0;
-    transition: opacity 0.6s ease;
-  }
-  body.on .l-bulb { opacity: 0.7; }
-
-  /* stem & base */
-  .l-stem { fill: #c2bdb4; }
-  .l-base { fill: #b8b3aa; }
-  .l-foot { fill: #aaa59c; }
-
-  /* cord */
-  .l-cord { stroke: #444; stroke-width: 2.5; stroke-linecap: round; }
-  .l-bead {
-    fill: #c8874a;
-    cursor: grab;
-    transition: fill 0.2s;
-    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
-  }
-  .l-bead:active { cursor: grabbing; fill: #e09a5a; }
-  .l-hit { cursor: grab; fill: transparent; }
-
-  /* shade inner highlight arc */
-  .l-highlight {
-    fill: none;
-    stroke: rgba(255,255,255,0.12);
-    stroke-width: 2;
-    opacity: 0;
-    transition: opacity 0.6s;
-  }
-  body.on .l-highlight { opacity: 1; }
-
-  .pull-hint {
-    color: #444;
-    font-size: 0.7rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    text-align: center;
-    transition: color 0.5s, opacity 0.5s;
-    opacity: 0.8;
-    user-select: none;
-  }
-  body.on .pull-hint { color: #888; }
-
-  /* ══════════════════════════════
-     PROFILE CARD
-  ══════════════════════════════ */
-  .profile-col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    opacity: 0;
-    transform: translateY(30px) scale(0.96);
-    pointer-events: none;
-    transition:
-      opacity 0.75s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-      transform 0.75s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  }
-  body.on .profile-col {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    pointer-events: all;
-  }
-
-  /* avatar */
-  .avatar-ring {
-    position: relative;
-    width: 120px; height: 120px;
-    margin-bottom: 18px;
-  }
-  .avatar-ring::before {
-    content: '';
-    position: absolute;
-    inset: -5px;
-    border-radius: 50%;
-    background: conic-gradient(#d4a373, #f5e6c8, #b38728, #f5e6c8, #d4a373);
-    animation: spin 4s linear infinite;
-    opacity: 0;
-    transition: opacity 0.6s;
-  }
-  body.on .avatar-ring::before { opacity: 1; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .avatar-ring::after {
-    content: '';
-    position: absolute;
-    inset: -3px;
-    border-radius: 50%;
-    background: var(--dark);
-    transition: background 0.7s;
-  }
-  body.on .avatar-ring::after { background: #12151a; }
-
-  .avatar-img {
-    position: relative;
-    z-index: 1;
-    width: 120px; height: 120px;
-    border-radius: 50%;
-    object-fit: cover;
-    display: block;
-  }
-
-  /* glow pulse behind avatar */
-  .avatar-glow {
-    position: absolute;
-    inset: -18px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(212,163,115,0.35), transparent 65%);
-    animation: pulse 2.6s ease-in-out infinite;
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0;
-    transition: opacity 0.6s;
-  }
-  body.on .avatar-glow { opacity: 1; }
-  @keyframes pulse {
-    0%,100% { transform: scale(1); opacity: 0.7; }
-    50% { transform: scale(1.1); opacity: 1; }
-  }
-
-  /* name & tag */
-  .p-name {
-    color: #fff;
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-shadow: 0 2px 16px rgba(0,0,0,0.7);
-    margin-bottom: 4px;
-    text-align: center;
-  }
-  .p-tag {
-    color: var(--gold);
-    font-size: 0.72rem;
-    font-weight: 500;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    margin-bottom: 28px;
-    text-align: center;
-    text-shadow: 0 0 12px rgba(212,163,115,0.4);
-  }
-
-  /* ── LINKS ── */
-  .links {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    width: 270px;
-  }
-
-  .lbtn {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 13px 18px;
-    border-radius: 16px;
-    text-decoration: none;
-    border: 1px solid rgba(255,255,255,0.1);
-    backdrop-filter: blur(14px);
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .lbtn::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: rgba(255,255,255,0.035);
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  .lbtn:hover { transform: translateX(6px) scale(1.015); }
-  .lbtn:hover::before { opacity: 1; }
-  .lbtn:active { transform: translateX(6px) scale(0.98); }
-
-  /* ripple */
-  .lbtn .ripple {
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.15);
-    transform: scale(0);
-    animation: ripple-anim 0.55s ease-out forwards;
     pointer-events: none;
   }
-  @keyframes ripple-anim {
-    to { transform: scale(3.5); opacity: 0; }
-  }
-
-  .lbtn-icon {
-    width: 38px; height: 38px;
-    border-radius: 11px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    font-size: 1rem;
-  }
-
-  .lbtn-text { flex: 1; }
-  .lbtn-label { display: block; color: #fff; font-size: 0.9rem; font-weight: 600; }
-  .lbtn-sub { display: block; color: rgba(255,255,255,0.42); font-size: 0.72rem; margin-top: 1px; }
-  .lbtn-arr { color: rgba(255,255,255,0.25); font-size: 1rem; transition: color 0.2s, transform 0.2s; }
-  .lbtn:hover .lbtn-arr { color: rgba(255,255,255,0.6); transform: translateX(3px); }
-
-  /* colors per platform */
-  .lbtn-discord { background: rgba(88,101,242,0.18); border-color: rgba(88,101,242,0.35); }
-  .lbtn-discord:hover { box-shadow: 0 6px 28px rgba(88,101,242,0.38); border-color: rgba(88,101,242,0.7); }
-  .lbtn-discord .lbtn-icon { background: #5865F2; }
-
-  .lbtn-wa { background: rgba(37,211,102,0.14); border-color: rgba(37,211,102,0.3); }
-  .lbtn-wa:hover { box-shadow: 0 6px 28px rgba(37,211,102,0.3); border-color: rgba(37,211,102,0.65); }
-  .lbtn-wa .lbtn-icon { background: #25D366; }
-
-  .lbtn-tt { background: rgba(20,20,20,0.55); border-color: rgba(255,255,255,0.12); }
-  .lbtn-tt:hover { box-shadow: 0 6px 28px rgba(255,0,80,0.25); border-color: rgba(255,0,80,0.5); }
-  .lbtn-tt .lbtn-icon { background: #010101; border: 1px solid #333; }
-
-  .lbtn-kick { background: rgba(83,252,27,0.1); border-color: rgba(83,252,27,0.25); }
-  .lbtn-kick:hover { box-shadow: 0 6px 28px rgba(83,252,27,0.22); border-color: rgba(83,252,27,0.6); }
-  .lbtn-kick .lbtn-icon { background: #53FC1B; }
-
-  /* ── PARTICLES ── */
   #particles {
     position: fixed; inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
+    pointer-events: none; z-index: 2; overflow: hidden;
   }
   .particle {
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(255,210,80,0.55);
+    position: absolute; border-radius: 50%;
+    background: rgba(212,163,115,0.3);
     animation: float-up linear infinite;
     opacity: 0;
   }
   @keyframes float-up {
-    0% { transform: translateY(0) scale(1); opacity: 0; }
-    10% { opacity: 0.7; }
-    90% { opacity: 0.3; }
+    0%   { transform: translateY(0) scale(1); opacity: 0; }
+    10%  { opacity: 0.6; }
+    90%  { opacity: 0.3; }
     100% { transform: translateY(-110vh) scale(0.3); opacity: 0; }
   }
 
-  /* ── RESPONSIVE ── */
-  @media (max-width: 620px) {
-    .page { gap: 30px; padding: 30px 16px; }
-    .lamp-wrap { width: 160px; height: 270px; }
-    .links { width: 240px; }
+  /* ══════════════════════
+      SHARED HANGER STYLE
+     ══════════════════════ */
+  .hanger-wrap {
+    position: absolute; top: 0; left: 50%;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center;
+    transform-origin: top center;
+    z-index: 12;
+    height: 260px;
   }
+  .rope-top {
+    width: 4px; height: 110px;
+    background: repeating-linear-gradient(to bottom, #6b4f2a 0px, #a0722a 4px, #6b4f2a 8px);
+    border-radius: 2px; position: relative; z-index: 1;
+  }
+  
+  .avatar-frame { position: relative; margin-top: -5px; width: 130px; height: 155px; z-index: 3; }
+  .avatar-ring {
+    position: relative; width: 130px; height: 155px; border-radius: 18px; overflow: hidden;
+    box-shadow: 0 10px 35px rgba(0,0,0,0.7);
+  }
+  .avatar-ring::before {
+    content: ''; position: absolute; inset: -5px; border-radius: 18px;
+    background: conic-gradient(#d4a373, #f5e6c8, #b38728, #f5e6c8, #d4a373);
+    animation: spin 4s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .avatar-ring::after { content: ''; position: absolute; inset: -2.5px; border-radius: 16px; background: #0a0c0f; }
+  .avatar-img { position: relative; z-index: 2; width: 100%; height: 100%; border-radius: 16px; object-fit: cover; display: block; }
+  
+  .avatar-glow {
+    position: absolute; inset: -15px; border-radius: 25px;
+    background: radial-gradient(circle, rgba(212,163,115,0.22), transparent 70%);
+    animation: glow-pulse 2.8s ease-in-out infinite; pointer-events: none; z-index: 1;
+  }
+  @keyframes glow-pulse {
+    0%,100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.06); opacity: 1; }
+  }
+
+  /* أنيميشن الهبوط والأرجوحة الدائم */
+  .animate-drop-swing {
+    animation: drop-elastic 1.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0s both,
+               swing 4s ease-in-out 1.4s infinite alternate;
+  }
+  @keyframes drop-elastic {
+    0% { transform: translate(-50%, -380px); }
+    60% { transform: translate(-50%, 15px); }
+    80% { transform: translate(-50%, -6px); }
+    100% { transform: translate(-50%, 0); }
+  }
+  @keyframes swing { from { transform: translate(-50%, 0) rotate(-2.5deg); } to { transform: translate(-50%, 0) rotate(2.5deg); } }
+
+  /* ══════════════════════
+      SECTION 1: INTRO SCREEN
+     ══════════════════════ */
+  #intro-screen {
+    position: fixed; inset: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    background: transparent;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    padding: 280px 20px 40px 20px;
+    overflow-y: auto;
+  }
+
+  .intro-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2.2rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 2px;
+    color: #fff;
+    text-shadow: 0 2px 18px rgba(0,0,0,0.7);
+    margin-top: 10px; margin-bottom: 5px;
+    text-align: center;
+  }
+  .intro-sub {
+    font-size: 0.75rem; color: #d4a373;
+    letter-spacing: 4px; text-transform: uppercase;
+    text-shadow: 0 0 14px rgba(212,163,115,0.45);
+    margin-bottom: 25px; font-weight: 500;
+    text-align: center;
+  }
+
+  .divider {
+    display: flex; align-items: center; gap: 15px;
+    width: 200px; margin-bottom: 35px;
+  }
+  .divider-line { flex: 1; height: 1px; background: linear-gradient(to right, transparent, rgba(212,163,115,0.4), transparent); }
+  .divider-star { color: #d4a373; font-size: 1rem; text-shadow: 0 0 10px rgba(212,163,115,0.5); }
+
+  /* مستطيل المنصات الموحد */
+  .horizontal-platforms-card {
+    width: min(350px, 92vw);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 12px;
+    margin-bottom: 28px;
+    pointer-events: none;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+  }
+  .platform-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    position: relative;
+  }
+  .platform-col:not(:last-child)::after {
+    content: '';
+    position: absolute; right: 0; top: 15%; bottom: 15%;
+    width: 1px; background: rgba(255,255,255,0.08);
+  }
+  
+  .p-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  /* تم تكبير حجم الأيقونات هنا لتصبح واضحة */
+  .p-title-wrap img { width: 24px; height: 24px; object-fit: contain; }
+  .p-kick { color: #53fc1b; }
+  .p-tiktok { color: #fff; }
+  .p-discord { color: #5865f2; }
+  
+  .p-sub { font-size: 0.62rem; color: rgba(255,255,255,0.35); letter-spacing: 1px; font-weight: 600; text-transform: uppercase; }
+
+  /* زر الدخول مع الأيقونة الحقيقية */
+  .main-enter-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: min(350px, 92vw); padding: 16px 40px; border-radius: 50px;
+    background: linear-gradient(135deg, #d4a373, #b38728);
+    color: #0a0c0f; font-weight: 700; font-family: 'Montserrat', sans-serif;
+    font-size: 1rem; letter-spacing: 1px;
+    box-shadow: 0 4px 25px rgba(212,163,115,0.25);
+    border: none; cursor: pointer;
+    animation: button-pulse 2.5s infinite;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .main-enter-btn img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+  }
+  .main-enter-btn:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 30px rgba(212,163,115,0.45);
+  }
+  @keyframes button-pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 4px 25px rgba(212,163,115,0.25); }
+    50% { transform: scale(1.025); box-shadow: 0 6px 30px rgba(245,230,200,0.45); }
+  }
+
+  /* ══════════════════════
+      SECTION 2: MAIN PROFILE LINKS
+     ══════════════════════ */
+  #main-profile-content {
+    position: relative;
+    z-index: 10;
+    min-height: 100vh;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 270px;
+    padding-bottom: 80px;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  .back-btn-container {
+    position: absolute;
+    top: 20px;
+    left: calc(50% - min(175px, 46vw));
+    width: min(350px, 92vw);
+    display: flex;
+    justify-content: flex-start;
+    z-index: 30;
+  }
+  .back-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 30px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.65); font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; backdrop-filter: blur(10px);
+    transition: all 0.25s ease;
+  }
+  .back-btn:hover {
+    background: rgba(212,163,115,0.14);
+    border-color: rgba(212,163,115,0.35);
+    color: #d4a373; transform: translateX(-3px);
+  }
+
+  .p-name {
+    color: #fff; font-size: 1.6rem; font-weight: 700; letter-spacing: 2px;
+    text-shadow: 0 2px 18px rgba(0,0,0,0.7); margin-top: 15px; margin-bottom: 5px; text-align: center;
+  }
+  .p-tag {
+    color: #d4a373; font-size: 0.73rem; font-weight: 500; letter-spacing: 4px;
+    text-transform: uppercase; text-align: center; text-shadow: 0 0 14px rgba(212,163,115,0.45); margin-bottom: 36px;
+  }
+
+  /* تصميم الروابط الزجاجية */
+  .links-container { display: flex; flex-direction: column; gap: 14px; width: min(350px, 92vw); }
+  .lbtn {
+    display: flex; align-items: center; gap: 14px; padding: 15px 18px; border-radius: 20px;
+    text-decoration: none; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); 
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    cursor: pointer; position: relative; transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  }
+  .lbtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    background: rgba(255,255,255,0.04);
+  }
+  .lbtn:active { transform: translateY(0) scale(0.99); }
+
+  .lbtn-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: transform 0.28s ease; overflow: hidden;
+    background: rgba(0,0,0,0.2);
+  }
+  .lbtn:hover .lbtn-icon { transform: scale(1.08) rotate(2deg); }
+  .lbtn-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  
+  .lbtn-text { flex: 1; text-align: left; }
+  .lbtn-label { display: flex; align-items: center; gap: 6px; color: #fff; font-size: 0.95rem; font-weight: 600; }
+  .lbtn-sub { display: block; color: rgba(255,255,255,0.38); font-size: 0.75rem; margin-top: 3px; }
+  .lbtn-arr { color: rgba(255,255,255,0.2); font-size: 1.2rem; transition: all 0.25s ease; }
+  .lbtn:hover .lbtn-arr { color: rgba(255,255,255,0.7); transform: translateX(3px); }
+
+  /* إضاءات الحواف الملونة الفاخرة */
+  .lbtn-instapay:hover { border-color: rgba(116,54,161,0.6); box-shadow: 0 8px 25px rgba(116,54,161,0.15); }
+  .lbtn-discord:hover { border-color: rgba(88,101,242,0.6); box-shadow: 0 8px 25px rgba(88,101,242,0.18); }
+  .lbtn-wa:hover { border-color: rgba(37,211,102,0.5); box-shadow: 0 8px 25px rgba(37,211,102,0.12); }
+  .lbtn-tt:hover { border-color: rgba(255,255,255,0.4); box-shadow: 0 8px 25px rgba(255,255,255,0.1); }
+  .lbtn-kick:hover { border-color: rgba(83,252,27,0.5); box-shadow: 0 8px 25px rgba(83,252,27,0.15); }
+
+  /* ── MUSIC WIDGET ── */
+  .music-player {
+    position: fixed; bottom: 20px; left: 20px;
+    z-index: 50; display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; border-radius: 30px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .music-info { display: flex; flex-direction: column; }
+  .music-status { font-size: 0.6rem; color: #d4a373; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
+  .music-title { font-size: 0.75rem; font-weight: 600; color: #fff; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  
+  .equalizer { display: flex; align-items: flex-end; gap: 3px; width: 20px; height: 18px; }
+  .eq-bar { width: 3px; height: 100%; background: #d4a373; border-radius: 2px; transform-origin: bottom; animation: bounce 0.8s ease-in-out infinite alternate; }
+  .eq-bar:nth-child(2) { animation-duration: 0.5s; animation-delay: 0.15s; background: #b38728; }
+  .eq-bar:nth-child(3) { animation-duration: 0.7s; animation-delay: 0.3s; }
+  @keyframes bounce { 0% { transform: scaleY(0.2); } 100% { transform: scaleY(1); } }
 </style>
 </head>
 <body>
 
 <div id="bg-img"></div>
-<div id="bg-glow"></div>
+<div id="bg-overlay"></div>
 <div id="particles"></div>
 
-<main class="page">
-
-  <!-- LAMP COLUMN -->
-  <div class="lamp-col">
-    <div class="lamp-wrap">
-      <svg class="lamp-svg" viewBox="0 0 170 280" xmlns="http://www.w3.org/2000/svg">
-        <!-- inner warm glow blob -->
-        <ellipse class="l-bulb" cx="85" cy="100" rx="50" ry="24"/>
-
-        <!-- shade highlight arc -->
-        <path class="l-highlight" d="M48 78 Q 85 58, 122 78"/>
-
-        <!-- mushroom shade -->
-        <path class="l-shade" d="M22 98 C 22 42, 148 42, 148 98 C 148 116, 22 116, 22 98 Z"/>
-
-        <!-- stem -->
-        <rect class="l-stem" x="78" y="110" width="14" height="142" rx="7"/>
-
-        <!-- base disc -->
-        <ellipse class="l-base" cx="85" cy="246" rx="30" ry="8"/>
-        <!-- foot plate -->
-        <rect class="l-foot" x="52" y="248" width="66" height="10" rx="5"/>
-
-        <!-- pull cord -->
-        <line class="l-cord" id="cordLine" x1="118" y1="112" x2="118" y2="172"/>
-        <circle class="l-bead" id="beadCircle" cx="118" cy="180" r="9"/>
-        <!-- invisible larger hit zone -->
-        <circle class="l-hit" id="beadHit" cx="118" cy="180" r="28"/>
-      </svg>
-    </div>
-    <p class="pull-hint" id="pullHint">↑ اسحب الخيط</p>
-  </div>
-
-  <!-- PROFILE COLUMN -->
-  <div class="profile-col" id="profileCol">
-    <div class="avatar-ring">
+<div id="intro-screen">
+  <div class="hanger-wrap animate-drop-swing" id="intro-avatar-hanger">
+    <div class="rope-top"></div>
+    <div class="avatar-frame">
       <div class="avatar-glow"></div>
-      <img class="avatar-img"
-        src="https://files.catbox.moe/9onzuy.png"
-        alt="Shebl"
-        onerror="this.src='https://ui-avatars.com/api/?name=SH&background=d4a373&color=0a0c0f&size=120'"/>
+      <div class="avatar-ring">
+        <img class="avatar-img" src="https://files.catbox.moe/9onzuy.png" alt="Shebl">
+      </div>
     </div>
+  </div>
+  
+  <h2 class="intro-title">Shebl</h2>
+  <p class="intro-sub">Content Creator & Streamer</p>
+  
+  <div class="divider">
+    <div class="divider-line"></div>
+    <span class="divider-star">✦</span>
+    <div class="divider-line"></div>
+  </div>
 
-    <h1 class="p-name">Shebl</h1>
-    <p class="p-tag">Streamer &nbsp;·&nbsp; Content Creator</p>
-
-    <div class="links">
-
-      <a class="lbtn lbtn-discord" href="https://discord.gg/UQtSzXS2" target="_blank" rel="noopener">
-        <div class="lbtn-icon">
-          <svg width="20" height="16" viewBox="0 0 24 18" fill="white">
-            <path d="M20.3 1.5A19.8 19.8 0 0 0 15.4 0c-.2.4-.5 1-.6 1.4a18.4 18.4 0 0 0-5.6 0C9.1 1 8.7.4 8.5 0A19.9 19.9 0 0 0 3.6 1.5C.5 6.2-.3 10.8.1 15.4a20 20 0 0 0 6.1 3.1c.5-.7.9-1.4 1.3-2.2a13 13 0 0 1-2-1l.5-.4a14.3 14.3 0 0 0 12 0l.5.4a13 13 0 0 1-2 1c.4.8.8 1.5 1.3 2.2a19.9 19.9 0 0 0 6-3.1c.5-5.2-.9-9.7-3.7-13.9ZM8 12.6c-1.2 0-2.2-1.1-2.2-2.5S6.8 7.6 8 7.6s2.2 1.1 2.2 2.5-1 2.5-2.2 2.5Zm8 0c-1.2 0-2.2-1.1-2.2-2.5s1-2.5 2.2-2.5 2.2 1.1 2.2 2.5-1 2.5-2.2 2.5Z"/>
-          </svg>
-        </div>
-        <div class="lbtn-text">
-          <span class="lbtn-label">Discord</span>
-          <span class="lbtn-sub">انضم للسيرفر</span>
-        </div>
-        <span class="lbtn-arr">›</span>
-      </a>
-
-      <a class="lbtn lbtn-wa" href="https://whatsapp.com/channel/0029Vb7sALoJ3juxfiTS7D05" target="_blank" rel="noopener">
-        <div class="lbtn-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-            <path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9-.3-.1-.5-.1-.7.1l-.9 1.1c-.1.2-.3.2-.6.1-1.6-.7-2.7-1.7-3.6-3.2-.3-.5 0-.7.2-.9l.6-.7c.2-.2.2-.4.1-.6l-.8-2c-.2-.5-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4C8 8.6 7 9.6 7 11.5c0 2 1.5 4 1.7 4.2.2.3 2.9 4.5 7 6.2.9.4 1.7.6 2.3.7 1 .2 1.8.2 2.5.1.8-.1 2.4-1 2.7-1.9.3-.9.3-1.7.2-1.9-.2-.1-.4-.2-.7-.3Z"/>
-            <path d="M12 0C5.4 0 0 5.4 0 12c0 2.1.5 4.1 1.5 5.9L0 24l6.3-1.6C8 23.4 10 24 12 24c6.6 0 12-5.4 12-12S18.6 0 12 0Zm0 22c-1.9 0-3.7-.5-5.3-1.4l-.4-.2-3.7 1 1-3.6-.2-.4A10 10 0 0 1 2 12C2 6.5 6.5 2 12 2s10 4.5 10 10-4.5 10-10 10Z"/>
-          </svg>
-        </div>
-        <div class="lbtn-text">
-          <span class="lbtn-label">WhatsApp Channel</span>
-          <span class="lbtn-sub">تابع القناة</span>
-        </div>
-        <span class="lbtn-arr">›</span>
-      </a>
-
-      <a class="lbtn lbtn-tt" href="https://www.tiktok.com/@shebl318" target="_blank" rel="noopener">
-        <div class="lbtn-icon">
-          <svg width="17" height="19" viewBox="0 0 24 27" fill="white">
-            <path d="M19.6 5.4A5.6 5.6 0 0 1 16 4V0h-4v18.5a3 3 0 1 1-2.5-3v-4a7 7 0 1 0 6.5 7V9.7a9.4 9.4 0 0 0 5.5 1.8V7.5a5.6 5.6 0 0 1-1.9-.1Z"/>
-          </svg>
-        </div>
-        <div class="lbtn-text">
-          <span class="lbtn-label">TikTok</span>
-          <span class="lbtn-sub">@shebl318</span>
-        </div>
-        <span class="lbtn-arr">›</span>
-      </a>
-
-      <a class="lbtn lbtn-kick" href="https://kick.com/shebl911" target="_blank" rel="noopener">
-        <div class="lbtn-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#0a0a0a">
-            <path d="M4 2h4v8l6-8h5L12 11l7 11h-5l-6-8v8H4z"/>
-          </svg>
-        </div>
-        <div class="lbtn-text">
-          <span class="lbtn-label">Kick</span>
-          <span class="lbtn-sub">شوف الستريم</span>
-        </div>
-        <span class="lbtn-arr">›</span>
-      </a>
-
+  <div class="horizontal-platforms-card">
+    <div class="platform-col">
+      <div class="p-title-wrap p-kick">
+        <img src="https://files.catbox.moe/xrq7pf.png" alt="Kick"> 𝑲𝒊𝒄𝒌
+      </div>
+      <span class="p-sub">𝕃𝕀𝕍𝔼</span>
+    </div>
+    <div class="platform-col">
+      <div class="p-title-wrap p-tiktok">
+        <img src="https://files.catbox.moe/z6kqxz.png" alt="TikTok"> 𝑻𝒊𝒌𝑻𝒐𝒌
+      </div>
+      <span class="p-sub">𝕍𝕀𝔻𝔼class</span>
+    </div>
+    <div class="platform-col">
+      <div class="p-title-wrap p-discord">
+        <img src="https://files.catbox.moe/tnr66m.png" alt="Discord"> 𝑫𝒊𝒔𝒄𝒐𝒓𝒅
+      </div>
+      <span class="p-sub">ℂOMMUNITY</span>
     </div>
   </div>
 
+  <button class="main-enter-btn" id="enter-trigger-btn">
+    <img src="https://img.icons8.com/fluency/48/link.png" alt="Link Icon">
+    <span>𝑴𝒚 𝑳𝒊𝒏𝒌𝒔</span>
+  </button>
+</div>
+
+<main id="main-profile-content">
+  <div class="back-btn-container">
+    <button class="back-btn" id="back-trigger-btn">◀ Back</button>
+  </div>
+
+  <div class="hanger-wrap" id="main-avatar-hanger">
+    <div class="rope-top"></div>
+    <div class="avatar-frame">
+      <div class="avatar-glow"></div>
+      <div class="avatar-ring">
+        <img class="avatar-img" src="https://files.catbox.moe/9onzuy.png" alt="Shebl">
+      </div>
+    </div>
+  </div>
+
+  <h1 class="p-name">Shebl</h1>
+  <p class="p-tag">Streamer·Content Creator</p>
+
+  <div class="links-container">
+    <a class="lbtn lbtn-instapay" href="https://ipn.eg/S/shebs/instapay/9C48Z1" target="_blank" rel="noopener">
+      <div class="lbtn-icon">
+        <img src="https://files.catbox.moe/uwzy06.png" alt="Instapay">
+      </div>
+      <div class="lbtn-text">
+        <span class="lbtn-label">𝑰𝒏𝒔𝒕𝒂𝒑𝒂𝒚</span>
+        <span class="lbtn-sub">Support the stream</span>
+      </div>
+      <span class="lbtn-arr">›</span>
+    </a>
+
+    <a class="lbtn lbtn-discord" href="https://discord.gg/UQtSzXS2" target="_blank" rel="noopener">
+      <div class="lbtn-icon">
+        <img src="https://files.catbox.moe/tnr66m.png" alt="Discord">
+      </div>
+      <div class="lbtn-text">
+        <span class="lbtn-label">𝑫𝒊𝒔𝒄𝒐𝒓𝒅</span>
+        <span class="lbtn-sub">Join our official server</span>
+      </div>
+      <span class="lbtn-arr">›</span>
+    </a>
+
+    <a class="lbtn lbtn-wa" href="https://whatsapp.com/channel/0029Vb7sALoJ3juxfiTS7D05" target="_blank" rel="noopener">
+      <div class="lbtn-icon">
+        <img src="https://files.catbox.moe/pymd14.png" alt="WhatsApp">
+      </div>
+      <div class="lbtn-text">
+        <span class="lbtn-label">𝑾𝒉𝒂𝒕𝒔𝑨𝒑𝒑 𝑪𝒉𝒂𝒏𝒏𝒆𝒍</span>
+        <span class="lbtn-sub">Follow the latest news & schedules</span>
+      </div>
+      <span class="lbtn-arr">›</span>
+    </a>
+
+    <a class="lbtn lbtn-tt" href="https://www.tiktok.com/@shebl318" target="_blank" rel="noopener">
+      <div class="lbtn-icon">
+        <img src="https://files.catbox.moe/z6kqxz.png" alt="TikTok">
+      </div>
+      <div class="lbtn-text">
+        <span class="lbtn-label">𝑻𝒊𝒌𝑻𝒐𝒌</span>
+        <span class="lbtn-sub">@shebl318</span>
+      </div>
+      <span class="lbtn-arr">›</span>
+    </a>
+
+    <a class="lbtn lbtn-kick" href="https://kick.com/shebl911" target="_blank" rel="noopener">
+      <div class="lbtn-icon">
+        <img src="https://files.catbox.moe/xrq7pf.png" alt="Kick">
+      </div>
+      <div class="lbtn-text">
+        <span class="lbtn-label">𝑲𝒊𝒄𝒌</span>
+        <span class="lbtn-sub">Watch the live stream here</span>
+      </div>
+      <span class="lbtn-arr">›</span>
+    </a>
+  </div>
 </main>
 
-<audio id="snd" src="https://files.catbox.moe/d5p37y.mp3" preload="auto"></audio>
+<div class="music-player">
+  <div class="equalizer">
+    <div class="eq-bar"></div>
+    <div class="eq-bar"></div>
+    <div class="eq-bar"></div>
+  </div>
+  <div class="music-info">
+    <span class="music-status">PLAYING</span>
+    <span class="music-title">Live Stream Beats</span>
+  </div>
+</div>
+
+<audio id="snd" src="https://files.catbox.moe/d5p37y.mp3" preload="auto" loop></audio>
 
 <script>
-  const body      = document.body;
-  const cordLine  = document.getElementById('cordLine');
-  const bead      = document.getElementById('beadCircle');
-  const hit       = document.getElementById('beadHit');
-  const profile   = document.getElementById('profileCol');
-  const bgImg     = document.getElementById('bg-img');
-  const bgGlow    = document.getElementById('bg-glow');
-  const hint      = document.getElementById('pullHint');
-  const snd       = document.getElementById('snd');
-  const particles = document.getElementById('particles');
-
-  const BEAD_BASE  = 180;
-  const CORD_BASE  = 172;
-  const MAX_PULL   = 65;
-  const TRIGGER    = 32;
-
-  let isOn    = false;
-  let drag    = false;
-  let startY  = 0;
-  let pull    = 0;
-
-  /* ── PARTICLE SYSTEM ── */
-  let particleActive = false;
-
-  function spawnParticle() {
-    if (!particleActive) return;
+  /* توليد الجزيئات في الخلفية */
+  const pContainer = document.getElementById('particles');
+  function spawnP() {
     const p = document.createElement('div');
     p.className = 'particle';
-    const size = 3 + Math.random() * 5;
-    p.style.cssText = `
-      width:${size}px; height:${size}px;
-      left:${10 + Math.random()*80}%;
-      bottom: -10px;
-      animation-duration:${4 + Math.random()*5}s;
-      animation-delay:${Math.random()*1.5}s;
-    `;
-    particles.appendChild(p);
-    setTimeout(() => p.remove(), 9500);
+    const s = 3 + Math.random() * 4;
+    p.style.cssText = `width:${s}px;height:${s}px;left:${5+Math.random()*90}%;bottom:-10px;animation-duration:${6+Math.random()*5}s;animation-delay:${Math.random()*2}s`;
+    pContainer.appendChild(p);
+    setTimeout(() => p.remove(), 11000);
   }
+  setInterval(spawnP, 700);
 
-  let particleInterval = null;
+  /* محرك التحكم بالصفحات والتنقل */
+  const enterBtn = document.getElementById('enter-trigger-btn');
+  const backBtn = document.getElementById('back-trigger-btn');
+  const introScreen = document.getElementById('intro-screen');
+  const mainContent = document.getElementById('main-profile-content');
+  const introHanger = document.getElementById('intro-avatar-hanger');
+  const mainHanger = document.getElementById('main-avatar-hanger');
+  const snd = document.getElementById('snd');
 
-  /* ── TOGGLE ── */
-  function toggleLamp() {
-    isOn = !isOn;
-    snd.currentTime = 0;
-    snd.play().catch(() => {});
-
-    if (isOn) {
-      body.classList.add('on');
-      bgImg.style.opacity = '1';
-      bgGlow.style.opacity = '1';
-      body.style.background = '#0f1216';
-      hint.textContent = '↑ اسحب للإطفاء';
-      particleActive = true;
-      particleInterval = setInterval(spawnParticle, 420);
-    } else {
-      body.classList.remove('on');
-      bgImg.style.opacity = '0';
-      bgGlow.style.opacity = '0';
-      body.style.background = '#0a0c0f';
-      hint.textContent = '↑ اسحب الخيط';
-      particleActive = false;
-      clearInterval(particleInterval);
-      particles.innerHTML = '';
+  function tryPlayMusic() {
+    if (snd.paused) {
+      snd.play().catch(() => console.log("Audio waiting interaction"));
     }
   }
 
-  /* ── DRAG ── */
-  function setPull(dy) {
-    pull = Math.max(0, Math.min(dy, MAX_PULL));
-    bead.setAttribute('cy', BEAD_BASE + pull);
-    hit.setAttribute('cy',  BEAD_BASE + pull);
-    cordLine.setAttribute('y2', CORD_BASE + pull);
-  }
-
-  function spring() {
-    let v = pull;
-    const step = () => {
-      v *= 0.65;
-      if (v < 0.4) { setPull(0); return; }
-      setPull(v);
-      requestAnimationFrame(step);
-    };
-    step();
-  }
-
-  /* ripple on buttons */
-  document.querySelectorAll('.lbtn').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      const r = document.createElement('div');
-      r.className = 'ripple';
-      const rect = this.getBoundingClientRect();
-      const size = Math.max(rect.width, rect.height);
-      r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
-      this.appendChild(r);
-      setTimeout(() => r.remove(), 600);
-    });
+  enterBtn.addEventListener('click', () => {
+    tryPlayMusic();
+    
+    introScreen.style.opacity = '0';
+    introScreen.style.transform = 'scale(0.97)';
+    
+    setTimeout(() => {
+      introScreen.style.display = 'none';
+      mainContent.style.display = 'flex';
+      
+      mainHanger.classList.remove('animate-drop-swing');
+      void mainHanger.offsetWidth;
+      
+      mainContent.style.opacity = '1';
+      mainHanger.classList.add('animate-drop-swing');
+    }, 450);
   });
 
-  /* mouse */
-  hit.addEventListener('mousedown', e => { drag = true; startY = e.clientY; e.preventDefault(); });
-  window.addEventListener('mousemove', e => { if (drag) setPull(e.clientY - startY); });
-  window.addEventListener('mouseup', () => {
-    if (!drag) return; drag = false;
-    if (pull >= TRIGGER) toggleLamp();
-    spring();
-  });
-
-  /* touch */
-  hit.addEventListener('touchstart', e => { drag = true; startY = e.touches[0].clientY; e.preventDefault(); }, { passive: false });
-  window.addEventListener('touchmove', e => { if (drag) { setPull(e.touches[0].clientY - startY); e.preventDefault(); } }, { passive: false });
-  window.addEventListener('touchend', () => {
-    if (!drag) return; drag = false;
-    if (pull >= TRIGGER) toggleLamp();
-    spring();
+  backBtn.addEventListener('click', () => {
+    tryPlayMusic();
+    mainContent.style.opacity = '0';
+    
+    setTimeout(() => {
+      mainContent.style.display = 'none';
+      introScreen.style.display = 'flex';
+      
+      introHanger.classList.remove('animate-drop-swing');
+      void introHanger.offsetWidth;
+      
+      introScreen.style.opacity = '1';
+      introScreen.style.transform = 'scale(1)';
+      introHanger.classList.add('animate-drop-swing');
+    }, 450);
   });
 </script>
 </body>
