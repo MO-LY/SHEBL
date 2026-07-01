@@ -92,7 +92,7 @@
   /* أنيميشن الهبوط والأرجوحة الدائم */
   .animate-drop-swing {
     animation: drop-elastic 1.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0s both,
-              swing 4s ease-in-out 1.4s infinite alternate;
+               swing 4s ease-in-out 1.4s infinite alternate;
   }
   @keyframes drop-elastic {
     0% { transform: translate(-50%, -380px); }
@@ -325,7 +325,6 @@
 </head>
 <body>
 
-<!-- فيديو الخلفية الجديد -->
 <video id="bg-video" autoplay loop muted playsinline>
   <source src="https://files.catbox.moe/ezr2nd.mp4" type="video/mp4">
 </video>
@@ -363,7 +362,7 @@
       <div class="p-title-wrap p-tiktok">
         <img src="https://files.catbox.moe/z6kqxz.png" alt="TikTok"> 𝑻𝒊𝒌𝑻𝒐𝒌
       </div>
-      <span class="p-sub">𝕍𝕀𝔻𝔼𝕆</span>
+      <span class="p-sub">𝕍𝕀𝔻𝔼folder</span>
     </div>
     <div class="platform-col">
       <div class="p-title-wrap p-discord">
@@ -490,6 +489,9 @@
   const introHanger = document.getElementById('intro-avatar-hanger');
   const mainHanger = document.getElementById('main-avatar-hanger');
   const snd = document.getElementById('snd');
+
+  // تعيين مستوى الصوت إلى 10% ليكون هادئاً وخلفياً جداً
+  snd.volume = 0.1;
 
   function tryPlayMusic() {
     if (snd.paused) {
